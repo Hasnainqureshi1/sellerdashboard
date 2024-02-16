@@ -26,7 +26,7 @@ console.log(setting);
      <div className="right">
     <div className='p-1 px-5 cursor-pointer bg-white border-xl shadow-sm flex rounded-xl justify-center items-center' onClick={showSetting}>
      <img src="https://www.iconpacks.net/icons/2/free-user-icon-3296-thumb.png" alt="user image" className='w-3 h-3 mr-2 md:w-7 md:h-7'  />
-     <p className='text-vsm mr-1 md:text-lg   '>Hasnain Qureshi</p>
+     <p className='text-vsm mr-1 md:text-lg   '>Aseef Javaid</p>
       
      <FaCaretDown />
 

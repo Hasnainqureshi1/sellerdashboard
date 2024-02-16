@@ -43,6 +43,9 @@ module.exports = {
         350: '350px',
         620: '620px',
       },
+      boxShadow: {
+        'remove': '0 0px 0px 0#ffffff00'
+      },
       textColor: {
         lightGray: '#F1EFEE',
         primary: '#FAFAFA',

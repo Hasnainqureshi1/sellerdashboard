@@ -79,7 +79,7 @@ useEffect(() => {
   return (
  <>
     <div className='p-2 m-3 bg-slate-100 lg:w-80v  '>
-      <h1 className=' '>Membership</h1>
+      <h1 className='text-4xl p-3 '>Membership</h1>
       <div className="flex flex-row-reverse items-center mt-3 p-4 border bg-white border-gray-300 rounded shadow-md">
       {/* Search Bar */}
       <div className="relative w-full flex flex-row mr-4 bg-white hover:shadow-sm">

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { app, firestore } from '../../../firebase/config'; // Import firestore from firebase config
+import { collection, addDoc } from "firebase/firestore"; 
 const AddSellerModal = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -7,9 +9,33 @@ const AddSellerModal = ({ isOpen, onClose }) => {
   const [password, setPassword] = useState('');
 
   const handleCreate = () => {
-    // Handle the logic for creating a seller (e.g., send data to backend)
-    // After handling, close the modal
-    onClose();
+    const auth = getAuth(app);
+    
+    // Create a new user with email and password
+    createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        const user = userCredential.user;
+          
+        // Set additional data for the seller in Firestore
+        const userRef = // Create a reference to the user document
+        userRef.set({
+          name: name,
+          shopName: shopName,
+          email:email,
+          isSeller:true
+        })
+        .then(() => {
+          console.log('User created:', user);
+          console.log('Additional data added to Firestore:', { name, shopName });
+          onClose(); // Close the modal after user creation
+        })
+        .catch((error) => {
+          console.error('Error adding additional data to Firestore:', error.message);
+        });
+      })
+      .catch((error) => {
+        console.error('Error creating user:', error.message);
+      });
   };
 
   return (
@@ -64,15 +90,15 @@ const AddSellerModal = ({ isOpen, onClose }) => {
           </div>
 
           <div className="mb-4">
-            <label htmlFor="password" className="block text-sm font-medium  ">
+            <label htmlFor="password" className="block text-sm font-medium">
               Password
             </label>
             <input
-              type="text"
+              type="password"
               id="password"
               value={password}
-              onChange={(e) => setShopName(e.target.value)}
-              className="w-full mt-1 p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 shadow-none "
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full mt-1 p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 shadow-none"
             />
           </div>
 
