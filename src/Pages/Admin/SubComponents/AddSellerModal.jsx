@@ -1,43 +1,72 @@
 import React, { useState } from 'react';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { app, firestore } from '../../../firebase/config'; // Import firestore from firebase config
-import { collection, addDoc } from "firebase/firestore"; 
+import { collection, addDoc,setDoc, doc } from "firebase/firestore"; // Import collection, addDoc, and doc
+import Date from '../../../function/Date';
+
 const AddSellerModal = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [shopName, setShopName] = useState('');
   const [password, setPassword] = useState('');
+ 
 
-  const handleCreate = () => {
-    const auth = getAuth(app);
-    
-    // Create a new user with email and password
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        const user = userCredential.user;
-          
-        // Set additional data for the seller in Firestore
-        const userRef = // Create a reference to the user document
-        userRef.set({
-          name: name,
-          shopName: shopName,
-          email:email,
-          isSeller:true
-        })
-        .then(() => {
-          console.log('User created:', user);
-          console.log('Additional data added to Firestore:', { name, shopName });
-          onClose(); // Close the modal after user creation
-        })
-        .catch((error) => {
-          console.error('Error adding additional data to Firestore:', error.message);
-        });
-      })
-      .catch((error) => {
-        console.error('Error creating user:', error.message);
-      });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  const handleCreate = async () => {
+    const Sellerauth = getAuth(app);
+    const formattedDate = Date;
+    console.log(formattedDate);
+    try {
+      // Create user credentials with email and password
+      const { user } = await createUserWithEmailAndPassword(email, password);
+  
+      // Create the main user document with common data
+      const userDocRef = doc(collection(firestore, 'users'), user.uid);
+      const commonUserData = {
+        name:name,
+        email:email,
+        user_type:"seller",
+        // Other common fields
+      };
+  
+      await setDoc(userDocRef, commonUserData);
+      console.log(user.uid)
+      // Create a document in the 'sellers' subcollection using user ID
+      const sellerDocRef = doc(collection(firestore, 'sellers'));
+      const specificUserData = {
+        // Data specific to the seller
+        seller_id:user.uid,
+        shop_name:shopName,
+        // date:,
+      };
+  
+      await setDoc(sellerDocRef, specificUserData);
+      // await signOut(auth);
+      console.log('User created successfully:', user);
+      onClose(); // Close the modal or handle success
+    } catch (error) {
+      console.error('Error creating user:', error.message);
+      // Handle errors appropriately
+    }
   };
-
+  
+  
   return (
     <div className={`fixed inset-0 overflow-y-auto ${isOpen ? '' : 'hidden'}`}>
       <div className="flex items-center justify-center min-h-screen">

@@ -1,12 +1,31 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
+import UpdatePasswordModal from '../Model/UpdatePasswordModal';
+import { AppContext } from '../../../../Context/Context';
 
 const Profile = () => {
-  // Dummy profile data for demonstration
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { User, checkAuthAndRole, alert } = useContext(AppContext);
   const [profile, setProfile] = useState({
-    name: 'John Doe',
-    email: 'johndoe@example.com',
-    password: '********', // Password is masked for security reasons
+    name: '',
+    email: '',
+  
   });
+useEffect(() => {
+  setProfile({
+    name:User.displayName,
+    email: User.email,
+  })
+}, [])
+
+
+  const handleUpdatePassword = (currentPassword, newPassword, confirmPassword) => {
+    // Add your logic to update the password
+    console.log('Current Password:', currentPassword);
+    console.log('New Password:', newPassword);
+    console.log('Confirm Password:', confirmPassword);
+    // Close the modal
+    setIsModalOpen(false);
+  };
 
   // Function to handle changes in input fields
   const handleInputChange = (e) => {
@@ -43,15 +62,17 @@ const Profile = () => {
         />
       </div>
       <div className="mb-4">
-        <label htmlFor="password" className="block text-gray-700 font-semibold mb-2">Password</label>
-        <input
-          type="password"
-          id="password"
-          name="password"
-          value={profile.password}
-          onChange={handleInputChange}
-          className="border border-gray-300 px-3 py-2 rounded-md w-full"
-        />
+      <button
+        className="bg-cyan-500 text-white px-4 py-2 rounded"
+        onClick={() => setIsModalOpen(true)}
+      >
+        Update Password
+      </button>
+      <UpdatePasswordModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onUpdatePassword={handleUpdatePassword}
+      />
       </div>
     </div>
   );

@@ -1,11 +1,17 @@
-import React, { useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { AiOutlineMenu } from "react-icons/ai";
 import { CiSaveDown1 } from "react-icons/ci";
 import { FaCaretDown } from "react-icons/fa";
 import { IoIosSettings } from "react-icons/io";
+import { AppContext } from '../../Context/Context';
 
 const Header = ({setsidebarShow,sdbr}) => {
+  const { User } = useContext(AppContext);
  const [setting, setsetting] = useState(false);
+ useEffect(() => {
+   console.log(User)
+ }, [User])
+ 
  const showSetting = ()=>{
 setsetting(!setting);
 console.log(setting);
@@ -26,7 +32,7 @@ console.log(setting);
      <div className="right">
     <div className='p-1 px-5 cursor-pointer bg-white border-xl shadow-sm flex rounded-xl justify-center items-center' onClick={showSetting}>
      <img src="https://www.iconpacks.net/icons/2/free-user-icon-3296-thumb.png" alt="user image" className='w-3 h-3 mr-2 md:w-7 md:h-7'  />
-     <p className='text-vsm mr-1 md:text-lg   '>Aseef Javaid</p>
+     <p className='text-vsm mr-1 md:text-lg   '>{User?.displayName}</p>
       
      <FaCaretDown />
 

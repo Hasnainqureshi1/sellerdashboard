@@ -6,6 +6,9 @@ import SellerTable from './../SubComponents/SellerTable';
 import AddSellerModal from '../SubComponents/AddSellerModal';
 import { useNavigate, Link, Route, Routes, Outlet } from 'react-router-dom';
 import SellerDetails from '../SubComponents/SellerDetails';
+import { auth, firestore } from '../../../firebase/config';
+import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
+import { checkAuthAndRole } from '../../../firebase/functions';
 const Sellers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRows, setSelectedRows] = useState([]);
@@ -36,7 +39,80 @@ const Sellers = () => {
 
     setData(newEntries);
   };
+
+  const [sellersData, setSellersData] = useState([]);
+  const fetchProductLengthPerSeller = async (sellerId) => {
+    try {
+      const productsCollectionRef = collection(firestore, 'products');
+      const q = query(productsCollectionRef, where('sellerId', '==', sellerId));
+      const querySnapshot = await getDocs(q);
+  
+      return querySnapshot.size; // Number of products for the seller
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      // Handle error appropriately
+    }
+  };
+  
+  
+    
+   
+ console.log(sellersData)
+ const fetchSellers = async (userId) => {
+  try {
+    const sellers = [];
+
+    // 1. Fetch sellers from the 'sellers' collection:
+    const sellersQuerySnapshot = await getDocs(collection(firestore, 'sellers'));
+    sellersQuerySnapshot.forEach(async (sellerDoc) => {
+      const sellerData = sellerDoc.data();
+      const sellerId = sellerData.seller_id;
+
+      // 2. Check if the seller matches the provided user ID:
+      if (userId === sellerId) {
+        // 3. Fetch user data for the seller:
+        const userDataDoc = await getDoc(doc(firestore, 'users', sellerId));
+        const userData = userDataDoc.data();
+
+        // 4. Exclude user_type and uuid from user data:
+        const relevantUserData = { ...userData };
+        delete relevantUserData.user_type;
+        delete relevantUserData.uuid;
+
+        // 5. Fetch product length for the seller:
+        const productLength = await fetchProductLengthPerSeller(sellerId);
+
+        sellers.push({
+          ...relevantUserData,
+          ...sellerData,
+          productLength,
+        });
+      }
+    });
+
+    return sellers;
+  } catch (error) {
+    console.error('Error fetching sellers:', error);
+    // Handle error appropriately
+    throw error; // Re-throw the error for further handling
+  }
+};
+
+// Usage example:
+const userId = '170Qve335ORvTPJKg1JAsnhjdkg1'; // Replace with the actual user ID
+fetchSellers(userId)
+  .then((sellers) => {
+    console.log('Sellers:', sellers);
+  })
+  .catch((error) => {
+    console.error('Error fetching sellers:', error);
+    // Handle error appropriately
+  });
+
+  
+  
  useEffect(() => {
+  
   generateDummyData();
 }, [ ])
 const [filteredData, setFilteredData] = useState([]);
@@ -57,10 +133,7 @@ const handleSearch = (e) => {
   setFilteredData(filteredData);
 };
 
-useEffect(() => {
-  // Set the filtered data when the original data changes
-  setFilteredData(data);
-}, [data]);
+
   const handleDelete = () => {
     console.log()
     const updatedData = data.filter((row) => !selectedRows.includes(row.seller_id));
@@ -73,7 +146,7 @@ useEffect(() => {
     // Perform sorting logic here if needed
   };
   const handleViewButtonClick = (sellerId) => {
-    navigate(`/sellerdetails/${sellerId}`);
+    navigate(`./sellerdetails/${sellerId}`);
    
   };
    

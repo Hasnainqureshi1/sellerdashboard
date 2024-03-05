@@ -1,4 +1,11 @@
-import React, { useState } from 'react';
+import React, { useContext,useEffect, useState } from 'react';
+// import { firestore } from ''; // Import Firestore from your Firebase configuration file
+
+import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
+import { firestore,auth } from '../../../../firebase/config';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import Alert from '../../Container/Alert';
+import { AppContext } from '../../../../Context/Context';
 
 const AddAdmin = () => {
   const [newAdmin, setNewAdmin] = useState({
@@ -6,28 +13,76 @@ const AddAdmin = () => {
     email: '',
     password: ''
   });
+ 
+  const { User,Showalert } = useContext(AppContext);
+ 
+  const [token, settoken] = useState( )
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewAdmin(prevState => ({
-      ...prevState,
-      [name]: value
-    }));
-  };
+   const { name, value } = e.target;
+   setNewAdmin(prevState => ({
+     ...prevState,
+     [name]: value
+   }));
+  
+ };
+ useEffect(() => {
+  User.getIdToken().then((token) => {
+    console.log('result')
+    console.log(token)
+    settoken(token);
+  }).
+  catch((error) => {
+    console.log('error',error);
+  });
 
-  const handleAddAdmin = () => {
-    // You can handle adding the new admin here
-    console.log('New admin:', newAdmin);
-    // Reset the form fields
-    setNewAdmin({
-      name: '',
-      email: '',
-      password: ''
+console.log(token);
+ }, [ ])
+ 
+
+ const handleAddAdmin = async () => {
+   try {
+    const response = await fetch(`http://localhost:5000/api/auth/create-admin`, {
+      method: "POST",
+      headers: {
+        authorization: token,
+        "Content-Type": "application/json", 
+       
+      },
+      body: JSON.stringify({
+        email: newAdmin.email,
+        name: newAdmin.name,
+        password: newAdmin.password
+      })
     });
-  };
+    if (response.ok) {
+      const json = await response.json();
+      console.log(json);
+ 
+   
+     // Reset the form fields
+     setNewAdmin({
+       name: '',
+       email: '',
+       password: ''
+     });
+     
+     Showalert("New Admin added successfully!","green");
+     // setalert(false);
+     console.log('New admin added successfully!');
+    }
+   } catch (error) {
+     console.error('Error adding admin: ', error);
+   }
+ };
+
+ 
 
   return (
     <div className=" ">
+   
+    
+ 
       <h1 className="text-2xl font-bold mb-4">Add Admin</h1>
       <div className="mb-4">
         <label htmlFor="name" className="block text-gray-700 font-semibold mb-2">Name</label>

@@ -63,7 +63,7 @@ const SellerTable = ({ data, onDelete,selectedRows ,onButtonClick, setSelectedRo
               <td className="px-0 md:px-1 py-2 w-2 text-xs lg:text-lg">{row.items}</td>
               <td className="px-0 md:px-1 py-2 w-2 text-xs lg:text-lg">
                 <Link
-                to={`/sellers/${row.seller_id}`}
+                to={`./${row.seller_id}`}
                   
                   className="bg-cyan-100 text-cyan-500 font-bold hover:bg-cyan-200 px-4 py-2 rounded focus:outline-none"
                 >

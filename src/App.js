@@ -1,48 +1,41 @@
 import React, { useEffect, useState } from "react";
 import Login from "./Pages/Login";
-import Admin from "./Pages/Admin";
-import Seller from "./Pages/Seller";
-import Membership from "./Pages/Admin/Components/Membership";
-import Setting from "./Pages/Admin/Components/Setting";
-import { Route, Routes } from "react-router-dom";
-import Header from "./Pages/Admin/Header";
-import SideBar from "./Pages/Admin/SideBar";
-import Sellers from "./Pages/Admin/Components/Sellers";
-import SellerDetails from "./Pages/Admin/SubComponents/SellerDetails";
-import SellerTable from "./Pages/Admin/SubComponents/SellerTable";
-const showSidebar = () => {};
+import { Routes, Route, useNavigate } from "react-router-dom";
+import SuperAdmin from './Routes/SuperAdmin';
+import { auth, firestore } from "./firebase/config";
+import { doc, getDoc } from "firebase/firestore";
+import SellerRoute from "./Routes/SellerRoute";
+import AppState from "./Context/AppState";
+import NotFound from "./Pages/Admin/Container/NotFound";
+
 const App = () => {
-  const [sidebarShow, setsidebarShow] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
+  const navigate = useNavigate();
   useEffect(() => {
-    const handleResize = () => {
-      window.innerWidth >= 768 ? setsidebarShow(true) : setsidebarShow(false);
-    };
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setCurrentUser(user);
+      if (!user) {
+        navigate('/login');
+      }
+    });
 
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
+    return () => unsubscribe();
+  }, [navigate]);
+   
   return (
-    <div>
-      <Header setsidebarShow={setsidebarShow} sdbr={sidebarShow} />
-      <div className="flex  flex-col lg:flex-row overflow-hidden">
-        <SideBar sdbr={sidebarShow} />
-        <Routes>
-          <Route path="dashboard" element={<Admin />} />
-          <Route path="/sellers/*" element={<Sellers/>}/>
-          <Route path="sellers/:sellerid" element={<SellerDetails/>}/>
-
-          
-          
-         
-          <Route path="membership" element={<Membership />} />
-          <Route path="settings" element={<Setting />} />
-          <Route path="/" element={<Admin />} />
-        </Routes>
-      </div>
-    </div>
+    <>
+    <AppState>
+      <Routes>
+        <Route path="/login" element={<Login setCurrentUser={setCurrentUser} />} />
+        <Route path="/" element={<Login setCurrentUser={setCurrentUser} />} />
+      {/* if role == admin then superadmin else seller or else login */}
+        <Route path="/superadmin/*" element={<SuperAdmin />} />
+        <Route path="/seller/*" element={<SellerRoute />} />
+        <Route path="*" element={<NotFound/>} />
+      
+      </Routes>
+      </AppState>
+    </>
   );
 };
 

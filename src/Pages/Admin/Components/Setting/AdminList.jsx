@@ -1,22 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import Alert from '../../Container/Alert';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { firestore } from '../../../../firebase/config';
+import { AppContext } from '../../../../Context/Context';
 
 const AdminList = () => {
-  // Dummy admin data for demonstration
-  const [admins, setAdmins] = useState([
-    { id: 1, name: 'Admin 1', email: 'admin1@example.com' },
-    { id: 2, name: 'Admin 2', email: 'admin2@example.com' },
-    { id: 3, name: 'Admin 3', email: 'admin3@example.com' },
-  ]);
+  const [admins, setAdmins] = useState([]);
+  const { User,Showalert } = useContext(AppContext);
+  useEffect(() => {
+    const fetchAdmins = async () => {
+      try {
+        const usersCollection = collection(firestore, 'users');
+        const querySnapshot = await getDocs(usersCollection);
+        const adminsData = [];
+    
+        querySnapshot.forEach((doc) => {
+          const userData = doc.data();
+          console.log(userData.role, userData.email)
+          // Check if the user has the 'admin' role in their custom claims
+          if (userData.role === 'admin') {
+            adminsData.push({ id: doc.id, ...userData });
+          }
+        });
+    
+        setAdmins(adminsData);
+      } catch (error) {
+        console.error('Error fetching admins:', error);
+      }
+    };
 
-  const handleDeleteAdmin = (id) => {
-    // Filter out the admin with the provided id
-    const updatedAdmins = admins.filter(admin => admin.id !== id);
-    // Update the admins state
-    setAdmins(updatedAdmins);
+    fetchAdmins();
+  }, []);
+
+  const handleDeleteAdmin = async (id) => {
+    Showalert("Admin deleted","green")
   };
 
   return (
-    <div className="  mx-auto">
+    <div className="mx-auto">
       <h1 className="text-2xl font-bold mb-4">Admin List</h1>
       <ul className="divide-y divide-gray-200">
         {admins.map(admin => (
@@ -25,12 +46,17 @@ const AdminList = () => {
               <p className="text-lg font-semibold">{admin.name}</p>
               <p className="text-gray-500">{admin.email}</p>
             </div>
-            <button
-              className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
-              onClick={() => handleDeleteAdmin(admin.id)}
-            >
-              Delete
-            </button>
+            {
+  (admin.id !== User.uid) && (
+    <button
+      className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+      onClick={() => handleDeleteAdmin(admin.id)}
+    >
+      Delete
+    </button>
+  )
+}
+
           </li>
         ))}
       </ul>
