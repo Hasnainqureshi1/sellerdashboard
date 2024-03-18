@@ -20,7 +20,7 @@ const UpdatePasswordModal = ({ isOpen, onClose, onUpdatePassword }) => {
       <div className="bg-white z-10 shadow-md rounded-lg p-8 w-96">
         <h2 className="text-lg font-semibold mb-4">Update Password</h2>
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
+          {/* <div className="mb-4">
             <label htmlFor="currentPassword" className="block mb-1">
               Current Password
             </label>
@@ -31,7 +31,7 @@ const UpdatePasswordModal = ({ isOpen, onClose, onUpdatePassword }) => {
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
             />
-          </div>
+          </div> */}
           <div className="mb-4">
             <label htmlFor="newPassword" className="block mb-1">
               New Password

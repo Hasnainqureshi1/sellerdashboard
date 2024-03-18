@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { getAuth, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { app, firestore } from '../../../firebase/config'; // Import firestore from firebase config
 import { collection, addDoc,setDoc, doc } from "firebase/firestore"; // Import collection, addDoc, and doc
 import Date from '../../../function/Date';
+import { AppContext } from '../../../Context/Context';
 
 const AddSellerModal = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('');
@@ -10,60 +11,60 @@ const AddSellerModal = ({ isOpen, onClose }) => {
   const [shopName, setShopName] = useState('');
   const [password, setPassword] = useState('');
  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  const { User,Showalert,checkTokenExpiration } = useContext(AppContext);
+  const [token, settoken] = useState( )
+  useEffect(() => {
+    User.getIdToken().then((token) => {
+      console.log('result')
+      console.log(token)
+      settoken(token);
+    }).
+    catch((error) => {
+      console.log('error',error);
+    });
   
+  console.log(token);
+   }, [ ])
   const handleCreate = async () => {
-    const Sellerauth = getAuth(app);
-    const formattedDate = Date;
-    console.log(formattedDate);
+    console.log(checkTokenExpiration())
     try {
-      // Create user credentials with email and password
-      const { user } = await createUserWithEmailAndPassword(email, password);
+      const response = await fetch(`http://localhost:5000/api/auth/create-seller`, {
+        method: "POST",
+        headers: {
+          authorization: token,
+          "Content-Type": "application/json", 
+         
+        },
+        body: JSON.stringify({
+          email: email,
+          name: name,
+          password: password,
+          shopName:shopName,
+        })
+      });
+      if (response.ok) {
+        const json = await response.json();
+        console.log(json);
+   
+     
+       // Reset the form fields
+       setName('')
+       setEmail('')
+       setPassword('')
+       setShopName('')
+      
+       Showalert("New Seller added successfully!","green");
+       // setalert(false);
+       console.log('New seller added successfully!');
+       onClose();
+      }
+     } catch (error) {
+       console.error('Error adding admin: ', error);
+     }
+   
+     
   
-      // Create the main user document with common data
-      const userDocRef = doc(collection(firestore, 'users'), user.uid);
-      const commonUserData = {
-        name:name,
-        email:email,
-        user_type:"seller",
-        // Other common fields
-      };
-  
-      await setDoc(userDocRef, commonUserData);
-      console.log(user.uid)
-      // Create a document in the 'sellers' subcollection using user ID
-      const sellerDocRef = doc(collection(firestore, 'sellers'));
-      const specificUserData = {
-        // Data specific to the seller
-        seller_id:user.uid,
-        shop_name:shopName,
-        // date:,
-      };
-  
-      await setDoc(sellerDocRef, specificUserData);
-      // await signOut(auth);
-      console.log('User created successfully:', user);
-      onClose(); // Close the modal or handle success
-    } catch (error) {
-      console.error('Error creating user:', error.message);
-      // Handle errors appropriately
-    }
+   
   };
   
   

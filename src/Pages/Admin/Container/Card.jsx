@@ -8,7 +8,7 @@ const Card = ({totalSales}) => {
      <h3 className='text-lg font-bold '>{totalSales.head}</h3>
    </div>
    <div className='flex justify-between'>
-     <p  className='text-lg font-bold '>{totalSales.sale}</p>
+     <p  className='text-lg font-bold '>${totalSales.sale}</p>
      <FaMoneyCheckDollar   className='text-2xl font-bold '/>
 
    </div>

@@ -6,6 +6,7 @@ import { MdDelete  } from "react-icons/md";
 import { HiOutlineSearch } from "react-icons/hi";
 import { AiFillCheckCircle } from 'react-icons/ai';
 import { IoIosPersonAdd } from "react-icons/io";
+import { firestore } from '../../../firebase/config';
 
 const Membership = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -58,6 +59,44 @@ const handleSearch = (e) => {
 
   setFilteredData(filteredData);
 };
+useEffect(() => {
+  const fetchMembershipRequests = async () => {
+    try {
+      const membershipRequestCollection = collection(firestore, 'membership_request');
+      const membershipRequestQuerySnapshot = await getDocs(membershipRequestCollection);
+      
+      const membershipRequestsData = membershipRequestQuerySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      // Set membership request data to the state
+      setFilteredData(membershipRequestsData);
+        setData(membershipRequestsData);
+     console.log(membershipRequestsData)
+    } catch (error) {
+      console.error('Error fetching membership requests data:', error);
+      // Handle error appropriately
+    }
+  };
+
+  fetchMembershipRequests();
+}, []); // Empty dependency array ensures the effect runs only once when the component mounts
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 useEffect(() => {
   // Set the filtered data when the original data changes

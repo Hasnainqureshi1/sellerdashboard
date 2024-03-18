@@ -1,4 +1,4 @@
-import React, { useState , useEffect } from 'react';
+import React, { useState , useEffect, useContext } from 'react';
 import { CiSearch } from 'react-icons/ci';
 import { MdDelete  } from "react-icons/md";
 import { HiOutlineSearch } from "react-icons/hi";
@@ -7,38 +7,29 @@ import AddSellerModal from '../SubComponents/AddSellerModal';
 import { useNavigate, Link, Route, Routes, Outlet } from 'react-router-dom';
 import SellerDetails from '../SubComponents/SellerDetails';
 import { auth, firestore } from '../../../firebase/config';
-import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { checkAuthAndRole } from '../../../firebase/functions';
+import { AppContext } from '../../../Context/Context';
 const Sellers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRows, setSelectedRows] = useState([]);
   const [sortOption, setSortOption] = useState('default');
   const navigate = useNavigate();
   const [isAddSellerModalOpen, setAddSellerModalOpen] = useState(false);
-  const [data, setData] = useState([
-    { seller_id: 1, name: 'John Doe', shop_name: 'Doe Emporium', date_created: '2022-01-01', total_sales: 500, items: 20 },
-    { seller_id: 2, name: 'Jane Smith', shop_name: 'Smith & Co', date_created: '2022-02-15', total_sales: 800, items: 30 },
-    { seller_id: 3, name: 'Bob Johnson', shop_name: 'Bob Mart', date_created: '2022-03-10', total_sales: 300, items: 15 },
-    // ... Add more initial data as needed
-  ]);
-  // Generate additional dummy data
-  const generateDummyData = () => {
-    const newEntries = Array.from({ length: 10 }, (_, index) => {
-      const userId = index + 1;
-      const randomChar = String.fromCharCode(65 + (userId % 26)); // A-Z characters based on userId
-    
-      return {
-        seller_id: userId,
-        name: `User${userId}_${randomChar}`,
-        shop_name: `Shop${userId}_${randomChar}`,
-        date_created: '2022-01-01',
-        total_sales: Math.floor(Math.random() * 1000) + 1,
-        items: Math.floor(Math.random() * 50) + 1,
-      };
+  const [data, setData] = useState();
+  
+  const [token, settoken] = useState( )
+  const { User,Showalert,checkTokenExpiration } = useContext(AppContext);
+  // getting token 
+  useEffect(() => {
+    User.getIdToken().then((token) => {
+     
+      settoken(token);
+    }).
+    catch((error) => {
+      console.log('error',error);
     });
-
-    setData(newEntries);
-  };
+  }, [ ])
 
   const [sellersData, setSellersData] = useState([]);
   const fetchProductLengthPerSeller = async (sellerId) => {
@@ -54,67 +45,60 @@ const Sellers = () => {
     }
   };
   
-  
+ 
     
    
  console.log(sellersData)
- const fetchSellers = async (userId) => {
-  try {
-    const sellers = [];
-
-    // 1. Fetch sellers from the 'sellers' collection:
-    const sellersQuerySnapshot = await getDocs(collection(firestore, 'sellers'));
-    sellersQuerySnapshot.forEach(async (sellerDoc) => {
-      const sellerData = sellerDoc.data();
-      const sellerId = sellerData.seller_id;
-
-      // 2. Check if the seller matches the provided user ID:
-      if (userId === sellerId) {
-        // 3. Fetch user data for the seller:
-        const userDataDoc = await getDoc(doc(firestore, 'users', sellerId));
-        const userData = userDataDoc.data();
-
-        // 4. Exclude user_type and uuid from user data:
-        const relevantUserData = { ...userData };
-        delete relevantUserData.user_type;
-        delete relevantUserData.uuid;
-
-        // 5. Fetch product length for the seller:
-        const productLength = await fetchProductLengthPerSeller(sellerId);
-
-        sellers.push({
-          ...relevantUserData,
-          ...sellerData,
-          productLength,
+ 
+//      
+useEffect(() => {
+  const fetchSellers = async () => {
+    try {
+      // Fetch data from users collection and listen for real-time updates
+      const usersCollection = collection(firestore, 'users');
+      const usersQuery = query(usersCollection, where('role', '==', 'seller'));
+      
+      onSnapshot(usersQuery, async (snapshot) => {
+        const usersData = {};
+  
+        snapshot.forEach((doc) => {
+          const userData = doc.data();
+          usersData[doc.id] = { id: doc.id, ...userData };
         });
-      }
-    });
-
-    return sellers;
-  } catch (error) {
-    console.error('Error fetching sellers:', error);
-    // Handle error appropriately
-    throw error; // Re-throw the error for further handling
-  }
-};
-
-// Usage example:
-const userId = '170Qve335ORvTPJKg1JAsnhjdkg1'; // Replace with the actual user ID
-fetchSellers(userId)
-  .then((sellers) => {
-    console.log('Sellers:', sellers);
-  })
-  .catch((error) => {
-    console.error('Error fetching sellers:', error);
-    // Handle error appropriately
-  });
-
   
+        // Fetch data from sellers collection and merge with user data
+        const sellersCollection = collection(firestore, 'sellers');
+        const sellersQuerySnapshot = await getDocs(sellersCollection);
+        
+        const sellersData = {};
+        sellersQuerySnapshot.forEach((doc) => {
+          const sellerData = doc.data();
+          const userId = doc.id; // Assuming the document ID in sellers collection matches the users collection
+          
+          if (userId in usersData) {
+            // Merge seller data into existing user data
+            usersData[userId] = { ...usersData[userId], ...sellerData };
+          } else {
+            // If there's no matching user data, just add seller data separately
+            sellersData[doc.id] = { id: doc.id, ...sellerData };
+          }
+        });
   
- useEffect(() => {
+        // Update state or perform actions with the fetched data
+        console.log(sellersData); // This will show the newly fetched sellers data
+        setFilteredData(usersData);
+        setData(usersData);
+      });
+    } catch (error) {
+      console.error('Error fetching users data:', error);
+      // Handle error appropriately
+    }
+  };
   
-  generateDummyData();
-}, [ ])
+
+  fetchSellers();
+}, []); // Empty dependency array ensures the effect runs only once when the component mounts
+
 const [filteredData, setFilteredData] = useState([]);
  
 
@@ -122,23 +106,49 @@ const handleSearch = (e) => {
   const searchTerm = e.target.value.toLowerCase();
   setSearchTerm(searchTerm);
 
-  const filteredData = data.filter((row) => {
+  const filteredData =  Object.values(data).filter((row) => {
     return (
       row.name.toLowerCase().includes(searchTerm) ||
-      row.shop_name.toLowerCase().includes(searchTerm)
+      row.shopName.toLowerCase().includes(searchTerm)
       // Add more fields to search if needed
     );
-  });
-
+  })  ;
+  
   setFilteredData(filteredData);
 };
+ // deleting the sellers
+  const handleDelete = async() => {
+     //logic for deleting seller only in frontend
+    console.log("Selected rows ", selectedRows);
+     const updatedData = Object.values(data).filter((row) => !selectedRows.includes(row.id));
+    setFilteredData(updatedData);
 
-
-  const handleDelete = () => {
-    console.log()
-    const updatedData = data.filter((row) => !selectedRows.includes(row.seller_id));
-    setData(updatedData);
     setSelectedRows([]);
+    Showalert("Seller Deleted successfully!",'green');
+    //logic for deleting seller from backend 
+    try {
+      const response = await fetch(`http://localhost:5000/api/auth/seller`, { //Api Call
+        method: "DELETE", 
+        headers: {
+          authorization: token, //verifying user role using token 
+          "Content-Type": "application/json", 
+         
+        },
+        body: JSON.stringify({
+        sellerId:selectedRows, 
+        })
+      });
+      if (response.ok) {
+        const json = await response.json();
+        console.log(json);
+   
+       
+      
+      }
+     } catch (error) {
+       console.error('Error Deleting seller: ', error);
+     }
+   
   };
 
   const handleSortChange = (option) => {

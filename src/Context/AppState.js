@@ -8,6 +8,31 @@ const AppState = (props) => {
   
   const [User, setUser] = useState([]);
   const [userRole, setUserRole] = useState();
+  const checkTokenExpiration = async () => {
+    const user = auth.currentUser;
+    console.log(user)
+    if (user) {
+      try {
+        const tokenResult = await user.getIdTokenResult();
+        const expirationTime = tokenResult.expirationTime;
+        console.log(expirationTime)
+        // Get current time in milliseconds
+        const currentTime = new Date().getTime();
+
+        // Check if token is expired
+        if (expirationTime < currentTime) {
+          // Token is expired, refresh it
+          await user.getIdToken(/* forceRefresh */ true);
+          // Token refreshed successfully
+          console.log('Token refreshed successfully');
+        }
+      } catch (error) {
+        console.error('Error refreshing token:', error);
+        // Handle error refreshing token
+      }
+    }
+  };
+
   const checkAuthAndRole = async () => {
     try {
       const user = await auth.currentUser; // Get the current user
@@ -106,7 +131,7 @@ localStorage.setItem("userId", user.uid);
   };
 
   return (
-    <AppContext.Provider value={{authenticateUser,Showalert,setAlert,topalert, User,checkAuthAndRole}}>
+    <AppContext.Provider value={{authenticateUser,checkTokenExpiration,Showalert,setAlert,topalert, User,checkAuthAndRole}}>
       {props.children}
     </AppContext.Provider>
   );
