@@ -97,7 +97,7 @@ useEffect(() => {
   
 
   fetchSellers();
-}, []); // Empty dependency array ensures the effect runs only once when the component mounts
+}, [data]); // Empty dependency array ensures the effect runs only once when the component mounts
 
 const [filteredData, setFilteredData] = useState([]);
  
@@ -179,16 +179,7 @@ const handleSearch = (e) => {
         />
       </div>
 
-      {/* Sorting Options */}
-      <select
-        value={sortOption}
-        onChange={handleSortChange}
-        className="mr-2 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-      >
-        <option value="default">Default</option>
-        <option value="recent">Recent</option>
-      </select>
-
+    
       {/* Delete Icon */}
       <button
           onClick={() => handleDelete()}

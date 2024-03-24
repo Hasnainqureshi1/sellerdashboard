@@ -1,16 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import Card from './Container/Card';
-import TotalCard from './Container/TotalCard';
-import MembersDashboardChart from './Container/MembersDashboardChart';
+import React, { useContext, useEffect, useState } from 'react';
+ 
+ 
+ 
 import { getFirestore, collection, getDocs, query, where, doc, getDoc, Timestamp } from 'firebase/firestore';
  
 import { firestore } from '../../firebase/config';
-
+import Card from './../Container/Card';
+import { AppContext } from '../../Context/Context';
+const { User, checkAuthAndRole, topalert } = useContext(AppContext);
 const Dashboard = () => {
   const [totalSales, setTotalSales] = useState([
-    { head: 'Total Market Sales', sale: 0 },
-    { head: 'This Week Market Sales', sale: 0 },
-    { head: 'This Month Market Sales', sale: 0 },
+    { head: 'Total  Sales', sale: 0 },
+    { head: 'This Week  Sales', sale: 0 },
+    { head: 'This Month  Sales', sale: 0 },
   ]);
   const [totalUsers, setTotalUsers] = useState([
     { head: 'Total Sellers', total: 0 },
@@ -126,12 +128,12 @@ const Dashboard = () => {
           ))}
         </div>
         <div className='mt-5 flex w-auto bg-white justify-evenly px-0 p-3'>
-          {totalUsers.map((totalUser, index) => (
+          {/* {totalUsers.map((totalUser, index) => (
             <TotalCard key={index} totalUser={totalUser} />
-          ))}
+          ))} */}
         </div>
       </div>
-      <MembersDashboardChart />
+      {/* <MembersDashboardChart /> */}
     </div>
   );
 };

@@ -10,7 +10,7 @@ const AddSellerModal = ({ isOpen, onClose }) => {
   const [name, setName] = useState('');
   const [shopName, setShopName] = useState('');
   const [password, setPassword] = useState('');
- 
+ const [AddingSeller, setAddingSeller] = useState(false)
   const { User,Showalert,checkTokenExpiration } = useContext(AppContext);
   const [token, settoken] = useState( )
   useEffect(() => {
@@ -27,6 +27,7 @@ const AddSellerModal = ({ isOpen, onClose }) => {
    }, [ ])
   const handleCreate = async () => {
     console.log(checkTokenExpiration())
+    setAddingSeller(true)
     try {
       const response = await fetch(`http://localhost:5000/api/auth/create-seller`, {
         method: "POST",
@@ -42,8 +43,8 @@ const AddSellerModal = ({ isOpen, onClose }) => {
           shopName:shopName,
         })
       });
+      const json = await response.json();
       if (response.ok) {
-        const json = await response.json();
         console.log(json);
    
      
@@ -58,9 +59,17 @@ const AddSellerModal = ({ isOpen, onClose }) => {
        console.log('New seller added successfully!');
        onClose();
       }
-     } catch (error) {
-       console.error('Error adding admin: ', error);
+      else{
+        console.log(json);
+        Showalert( json.statusText,"green");
+
      }
+     } catch (error) {
+     
+       console.error('Error adding Seller: ', error);
+     }  finally {
+      setAddingSeller(false); // Set AddingSeller back to false after the process is complete
+    }
    
      
   
@@ -71,14 +80,21 @@ const AddSellerModal = ({ isOpen, onClose }) => {
   return (
     <div className={`fixed inset-0 overflow-y-auto ${isOpen ? '' : 'hidden'}`}>
       <div className="flex items-center justify-center min-h-screen">
+        
         <div className="relative bg-white w-96 p-6 rounded-lg shadow-md">
           <button
             onClick={onClose}
             className="absolute top-2 right-2 text-gray-600 hover:text-gray-800 focus:outline-none"
-          >
+            >
             &times;
           </button>
           <h1 className="text-2xl font-bold mb-4">Add Seller</h1>
+          {AddingSeller ? (
+            <div>
+              <h3>Wait a moment, creating seller...</h3>
+            </div>
+          ) : (
+        <>
 
           <div className="mb-4">
             <label htmlFor="email" className="block text-sm font-medium text-gray-600">
@@ -130,14 +146,18 @@ const AddSellerModal = ({ isOpen, onClose }) => {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full mt-1 p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 shadow-none"
             />
-          </div>
 
+          </div>
+ 
           <button
             onClick={handleCreate}
             className="w-full bg-cyan-500 text-white py-2 rounded hover:bg-cyan-600 focus:outline-none"
           >
             Create
           </button>
+          </>
+      
+      )}
         </div>
       </div>
     </div>

@@ -12,6 +12,7 @@ import { checkAuthAndRole } from '../firebase/functions'
 import AdminState from './../Context/AdminState';
 import { AppContext } from '../Context/Context'
 import Alert from '../Pages/Admin/Container/Alert'
+import MembershipDetails from '../Pages/Admin/Components/Tables/MembershipDetails'
 
 const SuperAdmin = () => {
  const [sidebarShow, setsidebarShow] = useState(true);
@@ -45,7 +46,7 @@ const userId = localStorage.getItem('userId');
             // navigate('/superadmin')
           }
           else if (userRole =='seller'){
-
+              navigate('/sellerPanel')
           }
           else{
             console.log('user not logged in')
@@ -57,7 +58,12 @@ const userId = localStorage.getItem('userId');
           console.log(user)
     const role =    checkAuthAndRole();
     console.log(role);
-    if(!role ==="admin") {
+    if(role ==="seller") {
+      navigate('/sellerPanel')
+      localStorage.setItem('userRole','')
+      localStorage.setItem('userId','')
+  }
+    else if(!role ==="admin") {
       navigate('/')
       localStorage.setItem('userRole','')
       localStorage.setItem('userId','')
@@ -113,6 +119,7 @@ const userId = localStorage.getItem('userId');
         <Route path="/sellers/*" element={<Sellers />} />
         <Route path="/sellers/:sellerid" element={<SellerDetails />} />
         <Route path="/membership" element={<Membership />} />
+        <Route path="/membership/:id" element={<MembershipDetails />} />
         <Route path="/settings" element={<Setting />} />
         <Route path="/*" element={<Admin />} />
       </Routes>

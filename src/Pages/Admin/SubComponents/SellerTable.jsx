@@ -17,12 +17,18 @@ const SellerTable = ({ data, onDelete,selectedRows ,onButtonClick, setSelectedRo
     // console.log(selectedRows);
   };
   function formatDate(timestamp) {
-    const date = timestamp.toDate();
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    const month = months[date.getMonth()];
-    const day = date.getDate();
-    const year = date.getFullYear();
-    return `${month} ${day}, ${year}`;
+    // Check if the timestamp is a valid Firestore Timestamp object
+    if (timestamp && typeof timestamp === 'object' && typeof timestamp.toDate === 'function') {
+      const date = timestamp.toDate();
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      const month = months[date.getMonth()];
+      const day = date.getDate();
+      const year = date.getFullYear();
+      return `${month} ${day}, ${year}`;
+    } else {
+      // Handle the case when timestamp is not a Firestore Timestamp object
+      return "Invalid date";
+    }
   }
   useEffect(() => {
    console.log(selectedRows);
@@ -74,7 +80,7 @@ const SellerTable = ({ data, onDelete,selectedRows ,onButtonClick, setSelectedRo
     <td className="px-0 md:px-1 py-2 w-2 text-xs lg:text-lg">{row.items}</td>
     <td className="px-0 md:px-1 py-2 w-2 text-xs lg:text-lg">
       <Link
-        to={`./${row.seller_id}`}
+        to={`./${row.id}`}
         className="bg-cyan-100 text-cyan-500 font-bold hover:bg-cyan-200 px-4 py-2 rounded focus:outline-none"
       >
         View

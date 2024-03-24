@@ -30,7 +30,7 @@ const userId = localStorage.getItem('userId');
             navigate('/superadmin')
           }
           else if (role =='seller'){
-
+            navigate('/sellerPanel')
           }
           else{
         

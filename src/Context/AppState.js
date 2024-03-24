@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppContext } from "./Context";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { collection, doc, getDoc, onSnapshot } from "firebase/firestore";
 import { auth, firestore } from "../firebase/config";
 
 const AppState = (props) => {
@@ -83,8 +83,12 @@ localStorage.setItem("userId", user.uid);
 
         if (role === "admin") {
           navigate("/superadmin");
-        } else {
-          navigate("/"); // Redirect to regular user page or default route
+        }
+         else  if (role === "seller") {
+          navigate("/sellerPanel"); // Redirect to regular user page or default route
+        }
+        else{
+          navigate("/");
         }
       }
     } catch (error) {
@@ -129,6 +133,9 @@ localStorage.setItem("userId", user.uid);
       setAlert(null);
     }, 1500);
   };
+
+
+  
 
   return (
     <AppContext.Provider value={{authenticateUser,checkTokenExpiration,Showalert,setAlert,topalert, User,checkAuthAndRole}}>

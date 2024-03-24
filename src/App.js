@@ -30,7 +30,7 @@ const App = () => {
         <Route path="/" element={<Login setCurrentUser={setCurrentUser} />} />
       {/* if role == admin then superadmin else seller or else login */}
         <Route path="/superadmin/*" element={<SuperAdmin />} />
-        <Route path="/seller/*" element={<SellerRoute />} />
+        <Route path="/sellerPanel/*" element={<SellerRoute />} />
         <Route path="*" element={<NotFound/>} />
       
       </Routes>
