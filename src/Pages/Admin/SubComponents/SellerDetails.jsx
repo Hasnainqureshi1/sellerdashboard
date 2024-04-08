@@ -160,7 +160,7 @@ console.log(shopData)
         <h2 className='text-xl '>Loading</h2>
        </div>
        }
-      <SalesAnalytic sellerId = {uid}/>
+      
       </div>
     </div>
   );
