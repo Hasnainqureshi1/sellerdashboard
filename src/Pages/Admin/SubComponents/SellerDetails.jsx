@@ -15,59 +15,54 @@ console.log(params.sellerid);
  
  useEffect(() => {
   const fetchSellerDetails = async () => {
-    console.log("useeffect");
+    console.log("useEffect");
     try {
+      // Define document references for seller, user, shop, and queries for orders and reviews
       const sellerDocRef = doc(firestore, 'sellers', uid);
       const userDocRef = doc(firestore, 'users', uid);
-      const shopDocRef = doc(firestore, 'shop', uid);
+      const shopDocRef = doc(firestore, 'shop', uid); // Ensure the collection name is correct
       const orderCollectionRef = collection(firestore, 'orders');
       const orderQuery = query(orderCollectionRef, where('seller_id', '==', uid));
       const reviewCollectionRef = collection(firestore, 'reviews');
       const reviewQuery = query(reviewCollectionRef, where('seller_id', '==', uid));
 
+      // Execute all fetches concurrently with Promise.all
       const [sellerSnapshot, userSnapshot, shopSnapshot, ordersSnapshot, reviewsSnapshot] = await Promise.all([
         getDoc(sellerDocRef),
         getDoc(userDocRef),
         getDoc(shopDocRef),
         getDocs(orderQuery),
-        getDocs(reviewQuery), // Fetch reviews with the same seller_id
+        getDocs(reviewQuery),
       ]);
 
+      // Extract data from snapshots
       const sellerData = sellerSnapshot.data();
       const userData = userSnapshot.data();
       const shopData = shopSnapshot.data();
       const ordersData = ordersSnapshot.docs.map(doc => doc.data());
       const reviewsData = reviewsSnapshot.docs.map(doc => doc.data());
 
-      console.log(ordersData);
-      var  totalOrders = 0;
-      if(ordersData.length > 0) {
-       totalOrders = ordersData.length;
-      }
-      var  totalReviews = 0;
-      if(reviewsData.length >0){
-
-         totalReviews = reviewsData.length;
-      }
-      var category = 'uncategorized';
-      if(shopData?.category){
-        category = shopData?.category;
-      }
-       
-
+      // Process orders and reviews to count totals
+      const totalOrders = ordersData.length;
+      const totalReviews = reviewsData.length;
+      const category = shopData?.category || 'uncategorized'; // Fallback to 'uncategorized' if category is falsy
+console.log(shopData)
+      const shopName = await shopData?.shopName;
+      // Combine all fetched data
       const combinedData = {
         ...sellerData,
         ...userData,
-        category: category,
-        totalOrders: totalOrders,
-        totalReviews: totalReviews // Add total reviews
+        ...shopName , // Include shop name, fallback to placeholder
+        category,
+        totalOrders,
+        totalReviews,
       };
 
-      console.log(combinedData);
-      setSellerData(combinedData);
+      console.log(combinedData.shopName);
+      setSellerData(combinedData); // Update state with the combined data
     } catch (error) {
       console.error("Error fetching seller details:", error);
-      throw error;
+      // Handle or throw error as needed
     }
   };
 
@@ -104,6 +99,7 @@ console.log(params.sellerid);
    <div className='p-2 m-3 bg-slate-100 lg:w-80v  '>
     <div className='mt-3 ml-3 bg-white border shadow-md p-5'>
       <h2 className="text-2xl font-semibold mb-4">Seller Details</h2>
+    {console.log(sellerData)}
      {sellerData?
     
       <div className="grid grid-cols-2 gap-4">
@@ -117,7 +113,7 @@ console.log(params.sellerid);
         </div>
         <div>
           <p className="text-lg font-semibold">Shop Name:</p>
-          <p className="text-gray-600">{sellerData.shopName}</p>
+          <p className="text-gray-600">{(sellerData.shopName? sellerData.shopName:'----')}</p>
         </div>
         <div>
           <p className="text-lg font-semibold">Shop Category:</p>

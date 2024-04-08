@@ -61,9 +61,9 @@ useEffect(() => {
       onSnapshot(usersQuery, async (snapshot) => {
         const usersData = {};
   
-        snapshot.forEach((doc) => {
-          const userData = doc.data();
-          usersData[doc.id] = { id: doc.id, ...userData };
+        snapshot.forEach((docs) => {
+          const userData = docs.data();
+          usersData[docs.id] = { id: docs.id, ...userData };
         });
   
         // Fetch data from sellers collection and merge with user data
@@ -71,21 +71,37 @@ useEffect(() => {
         const sellersQuerySnapshot = await getDocs(sellersCollection);
         
         const sellersData = {};
-        sellersQuerySnapshot.forEach((doc) => {
-          const sellerData = doc.data();
-          const userId = doc.id; // Assuming the document ID in sellers collection matches the users collection
+        const shopNamePromises = []; // Prepare to hold promises for fetching shop names
+        
+        sellersQuerySnapshot.forEach((docs) => {
+          const sellerData = docs.data();
+          const userId = docs.id; // Assuming the document ID in sellers collection matches the users collection
           
           if (userId in usersData) {
             // Merge seller data into existing user data
             usersData[userId] = { ...usersData[userId], ...sellerData };
+            // Prepare to fetch shop name
+            const shopNamePromise = getDoc(doc(firestore, 'shop', userId))
+              .then(shopDoc => {
+                if (shopDoc.exists()) {
+                  usersData[userId].shopName = shopDoc.data().storeName;  
+                  usersData[userId].shopName = '------'; // Placeholder if the shop doesn't exist
+                }
+              })
+              .catch(error => {
+                console.error(`Error fetching shop for userId ${userId}:`, error);
+                usersData[userId].shopName = '------'; // Placeholder in case of an error
+              });
+        
+            shopNamePromises.push(shopNamePromise);
           } else {
             // If there's no matching user data, just add seller data separately
-            sellersData[doc.id] = { id: doc.id, ...sellerData };
+            sellersData[docs.id] = { id: docs.id, ...sellerData };
           }
         });
   
         // Update state or perform actions with the fetched data
-        console.log(sellersData); // This will show the newly fetched sellers data
+        console.log(usersData); // This will show the newly fetched sellers data
         setFilteredData(usersData);
         setData(usersData);
       });
@@ -97,7 +113,7 @@ useEffect(() => {
   
 
   fetchSellers();
-}, [data]); // Empty dependency array ensures the effect runs only once when the component mounts
+}, [ ]); // Empty dependency array ensures the effect runs only once when the component mounts
 
 const [filteredData, setFilteredData] = useState([]);
  
@@ -107,9 +123,9 @@ const handleSearch = (e) => {
   setSearchTerm(searchTerm);
 
   const filteredData =  Object.values(data).filter((row) => {
+    console.log(row)
     return (
-      row.name.toLowerCase().includes(searchTerm) ||
-      row.shopName.toLowerCase().includes(searchTerm)
+      row.name.toLowerCase().includes(searchTerm)   
       // Add more fields to search if needed
     );
   })  ;

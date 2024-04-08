@@ -41,7 +41,7 @@ const Tabs = () => {
           }      text-md px-4 py-2 focus:outline-none`}
           onClick={() => changeTab("addAdmin")}
         >
-          Add Admin
+          Add User
         </button>
       </div>
       <div className="mt-8">

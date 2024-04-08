@@ -101,7 +101,7 @@ const ProductEdit = () => {
         </div>
         <div className="mb-4">
           <label htmlFor="price" className="block text-sm font-medium text-gray-700">Price</label>
-          <input type="text" id="price" name="price" value={product.price} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required />
+          <input type="number" id="price" name="price" value={product.price} onChange={handleChange} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required />
         </div>
 
         <div className="mb-4">

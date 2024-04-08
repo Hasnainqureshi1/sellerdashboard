@@ -4,6 +4,7 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { firestore } from '../../../firebase/config'; // Adjust the import path as needed
 import { FaBox, FaUser, FaCalendarAlt, FaDollarSign, FaInfoCircle, FaCheckCircle, FaTimesCircle, FaBan } from 'react-icons/fa';
 import { AppContext } from '../../../Context/Context';
+import { MdOutlineProductionQuantityLimits } from "react-icons/md";
 
 const OrderView = () => {
  const [order, setOrder] = useState(null);
@@ -11,49 +12,73 @@ const OrderView = () => {
  const { User,Showalert } = useContext(AppContext);
  const { orderId } = useParams();
 
-  useEffect(() => {
-   const fetchOrderDetails = async () => {
-     if (!User || !User.uid || !orderId) {
-       setIsLoading(false);
-       return;
-     }
-
-     setIsLoading(true);
-     const orderRef = doc(firestore, "orders", orderId);
-     const orderSnap = await getDoc(orderRef);
-
-     if (!orderSnap.exists()) {
-       console.log("No such order!");
-       setIsLoading(false);
-       return;
-     }
-
-     const orderData = orderSnap.data();
+ 
+ useEffect(() => {
+  const fetchOrderDetails = async () => {
+    setIsLoading(true);
+    if (!User || !User.uid || !orderId) {
+      setIsLoading(false);
+      return;
+    }
      
-     // Fetch product name
-     const productRef = doc(firestore, "products", orderData.prod_id);
-     const productSnap = await getDoc(productRef);
-     const productName = productSnap.exists() ? productSnap.data().name : "Unknown Product";
-     
-     // Fetch customer name
-     const userRef = doc(firestore, "app_users", orderData.user_id);
-     const userSnap = await getDoc(userRef);
-     const customerName = userSnap.exists() ? userSnap.data().name : "Unknown Customer";
+    const orderRef = doc(firestore, "orders", orderId);
+    const orderSnap = await getDoc(orderRef);
+    if (!orderSnap.exists()) {
+      console.log("No such order!");
+      setIsLoading(false);
+      return;
+    }
+    const orderData = orderSnap.data();
+    console.log(orderData)
+    console.log(orderData)
+    // Fetch products information
+   
+      // Normalize the products to an array if it's not one
+      let products = Array.isArray(orderData.products) ? orderData.products : [orderData.products];
+      let productsInfo = [];
+    
+      try {
+        productsInfo = await Promise.all(products.map(async (product) => {
+          try {
+            console.log(product)
+            const productRef = doc(firestore, 'products', product.prod_id);
+            const productSnap = await getDoc(productRef);
+            if (!productSnap.exists()) {
+              throw new Error(`Product with ID ${product.prod_id} not found`);
+            }
+            return {
+              ...product,
+              productName: productSnap.data().name,
+              price: productSnap.data().price,
+            };
+          } catch (error) {
+            console.error(error);
+            return {
+              prod_id: product.prod_id,
+              productName: "Product not found",
+              price: 0,
+            };
+          }
+        }));
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      }
+    // Fetch customer name
+    const userRef = doc(firestore, "app_users", orderData.user_id);
+    const userSnap = await getDoc(userRef);
+    const customerName = userSnap.exists() ? userSnap.data().name : "Unknown Customer";
+console.log(await productsInfo)
+    setOrder({
+      ...orderData,
+      productsInfo,
+      customerName,
+    });
+    console.log(await order)
+    setIsLoading(false);
+  };
 
-     // Calculate total price based on quantity and sold_price
-     const totalPrice = orderData.quantity * orderData.sold_price;
-
-     setOrder({
-       ...orderData,
-       productName,
-       customerName,
-       totalPrice
-     });
-     setIsLoading(false);
-   };
-
-   fetchOrderDetails();
- }, [User, orderId]);
+  fetchOrderDetails();
+}, [User, orderId]);
   if (!order) return <div className="text-center">Loading order details...</div>;
 
   // Helper function to determine the status icon
@@ -116,21 +141,43 @@ const OrderView = () => {
           <FaBox className="text-cyan-600 mr-2" />Order Details
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {order.productsInfo.map((product, index) => (
+          <div key={index} className="flex items-center flex-wrap text-gray-700">
+            
+          
+        <div className="flex  flex-col flex-wrap text-gray-700" key={index}>
+         
+         <div className="flex items-center text-gray-700">
+           <FaBox className="text-cyan-600 mr-2" /> 
+           <span>Name:{product.productName}</span>
+          </div>
+         
+          <div className="flex items-center text-gray-700">
+            <FaDollarSign className="text-cyan-600 mr-2" />
+            <span>Price: ${product.sold_price}</span>
+          </div>
+          <div className="flex items-center text-gray-700">
+           
+            <MdOutlineProductionQuantityLimits  className="text-cyan-600 mr-2" />
+            <span>Qunatity:{product.quantity}</span>
+          </div>
+          
+        </div>
+     
+          </div>
+      ))}
+        </div>
+        <div className="grid grid-cols-1 mt-3 md:grid-cols-2 gap-3">
+        
           <div className="flex items-center text-gray-700">
             <FaUser className="text-cyan-600 mr-2" />
             <span>Customer: {order.customerName}</span>
           </div>
-          <div className="flex items-center text-gray-700">
-            <FaBox className="text-cyan-600 mr-2" />
-            <span>Product: {order.productName}</span>
-          </div>
+      
+          
           <div className="flex items-center text-gray-700">
             <FaDollarSign className="text-cyan-600 mr-2" />
-            <span>Price per Item: ${order.sold_price}</span>
-          </div>
-          <div className="flex items-center text-gray-700">
-            <FaDollarSign className="text-cyan-600 mr-2" />
-            <span>Total Price: ${order.totalPrice?.toFixed(2)}</span>
+            <span>Total Price:  ${order.productsInfo.reduce((total, product) => total + (product.quantity * product.sold_price), 0)}</span>
           </div>
           <div className="flex items-center text-gray-700">
             <FaCalendarAlt className="text-cyan-600 mr-2" />

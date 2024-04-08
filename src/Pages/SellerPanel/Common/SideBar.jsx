@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore'; // Import Firestore functions
+import { doc, getDoc, onSnapshot } from 'firebase/firestore'; // Import Firestore functions
 import { FaUser, FaStore, FaCog, FaUsersCog, FaShoppingCart } from 'react-icons/fa';
  
 import { AppContext } from '../../../Context/Context';
@@ -11,27 +11,29 @@ const SideBar = ({ sdbr }) => {
   const [isStoreSetup, setIsStoreSetup] = useState(false);
 
   useEffect(() => {
-    const checkShopExists = async () => {
-      if (User && User.uid) {
-        try {
-          const ShopDocRef = doc(firestore, 'shop', User.uid);
-          const ShopDocSnapshot = await getDoc(ShopDocRef);
-          if (ShopDocSnapshot.exists()) {
-            // Document exists, indicating the store is set up
-            setIsStoreSetup(true);
-          } else {
-            // Document does not exist, indicating no store setup
-            setIsStoreSetup(false);
-          }
-        } catch (error) {
-          console.error("Error checking shop existence:", error);
+    if (User && User.uid) {
+      // Creating a reference to the shop document for the current user
+      const ShopDocRef = doc(firestore, 'shop', User.uid);
+
+      // Subscribing to real-time updates for the shop document
+      const unsubscribe = onSnapshot(ShopDocRef, (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          // Document exists, indicating the store is set up
+          setIsStoreSetup(true);
+        } else {
+          // Document does not exist, indicating no store setup
           setIsStoreSetup(false);
         }
-      }
-    };
+      }, (error) => {
+        // Handling any errors that occur during fetching
+        console.error("Error fetching shop document:", error);
+      });
 
-    checkShopExists();
+      // Cleanup function to unsubscribe from the document changes when the component unmounts
+      return () => unsubscribe();
+    }
   }, [User]);
+
 
   return (
     <div

@@ -13,6 +13,9 @@ import AdminState from './../Context/AdminState';
 import { AppContext } from '../Context/Context'
 import Alert from '../Pages/Admin/Container/Alert'
 import MembershipDetails from '../Pages/Admin/Components/Tables/MembershipDetails'
+import OrderHistory from '../Pages/Admin/Components/OrderHistory'
+import OrderScan from '../Pages/Admin/Components/OrderScan'
+import OrderHistoryView from './../Pages/Admin/Components/OrderHistoryView';
 
 const SuperAdmin = () => {
  const [sidebarShow, setsidebarShow] = useState(true);
@@ -119,6 +122,9 @@ const userId = localStorage.getItem('userId');
         <Route path="/sellers/*" element={<Sellers />} />
         <Route path="/sellers/:sellerid" element={<SellerDetails />} />
         <Route path="/membership" element={<Membership />} />
+        <Route path="/order-scan" element={<OrderScan />} />
+        <Route path="/order-history" element={<OrderHistory />} />
+        <Route path="/order-history/:id" element={<OrderHistoryView />} />
         <Route path="/membership/:id" element={<MembershipDetails />} />
         <Route path="/settings" element={<Setting />} />
         <Route path="/*" element={<Admin />} />

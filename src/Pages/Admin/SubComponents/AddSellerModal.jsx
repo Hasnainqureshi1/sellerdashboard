@@ -40,7 +40,7 @@ const AddSellerModal = ({ isOpen, onClose }) => {
           email: email,
           name: name,
           password: password,
-          shopName:shopName,
+        
         })
       });
       const json = await response.json();
@@ -52,7 +52,7 @@ const AddSellerModal = ({ isOpen, onClose }) => {
        setName('')
        setEmail('')
        setPassword('')
-       setShopName('')
+        
       
        Showalert("New Seller added successfully!","green");
        // setalert(false);
@@ -122,18 +122,7 @@ const AddSellerModal = ({ isOpen, onClose }) => {
             />
           </div>
 
-          <div className="mb-4">
-            <label htmlFor="shopName" className="block text-sm font-medium text-gray-600">
-              Shop Name
-            </label>
-            <input
-              type="text"
-              id="shopName"
-              value={shopName}
-              onChange={(e) => setShopName(e.target.value)}
-              className="w-full mt-1 p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-            />
-          </div>
+          
 
           <div className="mb-4">
             <label htmlFor="password" className="block text-sm font-medium">

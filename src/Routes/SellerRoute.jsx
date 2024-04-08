@@ -21,6 +21,8 @@ import ProductEdit from '../Pages/SellerPanel/Pages/ProductEdit';
 import Orders from '../Pages/SellerPanel/Pages/Orders';
 import QrScanner from '../Pages/SellerPanel/Pages/QrScanner';
 import OrderView from '../Pages/SellerPanel/Pages/OrderView';
+import CreateOrder from '../Pages/SellerPanel/Pages/CreateOrder';
+import Stripe from '../Pages/SellerPanel/Pages/Stripe';
  
  
  
@@ -106,12 +108,15 @@ const userId = localStorage.getItem('userId');
             <Route path="/storeSetup" element={<StoreSetup />} />
             <Route path="/store" element={<Store />} />
             <Route path="/products" element={<Products />} />
+            <Route path="/create-order" element={<CreateOrder />} />
             <Route path="/edit-product/:productId" element={<ProductEdit />} />
             <Route path="/product/:productId" element={<ProductDetail />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/orderScan" element={<QrScanner />} />
             <Route path="/orders/:orderId" element={<OrderView/>} />
             <Route path="/" element={<SellerDashboard />} />
+            {/* <Route path="/connectStripe" element={<Stripe />} /> */}
+
             
           </Routes>
         </div>

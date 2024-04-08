@@ -83,7 +83,7 @@ console.log(token);
    
     
  
-      <h1 className="text-2xl font-bold mb-4">Add Admin</h1>
+      <h1 className="text-2xl font-bold mb-4">Add User</h1>
       <div className="mb-4">
         <label htmlFor="name" className="block text-gray-700 font-semibold mb-2">Name</label>
         <input
@@ -122,7 +122,7 @@ console.log(token);
           onClick={handleAddAdmin}
           className="bg-cyan-500 hover:bg-cyan-600 hover:shadow-none focus:shaodw-none focus:border-none hover:border-white text-white font-bold py-2 px-4 rounded"
         >
-          Add Admin
+          Add User
         </button>
       </div>
     </div>

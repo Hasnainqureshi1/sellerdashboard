@@ -38,7 +38,7 @@ const AdminList = () => {
 
   return (
     <div className="mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Admin List</h1>
+      <h1 className="text-2xl font-bold mb-4">Users List</h1>
       <ul className="divide-y divide-gray-200">
         {admins.map(admin => (
           <li key={admin.id} className="py-4 flex justify-between items-center">

@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { AppContext } from '../../../Context/Context';
 import { firestore, storage } from '../../../firebase/config';
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
-import { collection, doc, setDoc } from 'firebase/firestore';
+import { collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 
 const AddProductModal = ({ isOpen, onClose }) => {
  const { User,Showalert } = useContext(AppContext);
@@ -38,7 +38,8 @@ const AddProductModal = ({ isOpen, onClose }) => {
     description: productDescription,
     price: productPrice,
     images: imageUrls,
-    seller_id: User.uid, // Assuming User.uid is available from context
+    seller_id: User.uid, 
+    createdAt:serverTimestamp(),
 };
 
 // Create a new document in 'products' collection with an auto-generated ID

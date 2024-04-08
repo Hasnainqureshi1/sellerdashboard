@@ -21,84 +21,78 @@ const SellerDashboard = () => {
   const uid = User.uid;
 
   useEffect(() => {
-    const fetchSalesData = async () => {
+   const fetchSalesData = async () => {
       try {
-        // Fetch total sales from the seller with the provided UID
-        const ShopDocRef = doc(firestore, 'shop', uid);
-        const ShopDocSnapshot = await getDoc(ShopDocRef);
-       const shopLength =  ShopDocSnapshot ;
-       console.log(shopLength)
-       if (ShopDocSnapshot.exists()) {
-        console.log("seller");
-        setIsStoreSetup(false)
-        // Fetch total sales from the seller with the provided UID
-        const sellerDocRef = doc(firestore, 'sellers', uid);
-        const sellerDocSnapshot = await getDoc(sellerDocRef);
+        // Check if the store is already set up
+        const shopDocRef = doc(firestore, 'shop', uid);
+        const shopDocSnapshot = await getDoc(shopDocRef);
 
-        if (sellerDocSnapshot.exists()) {
-          //if shop document exists then fetch seller details 
-          //else to show setup store
-          const sellerData = sellerDocSnapshot.data();
-          const totalSalesSum = sellerData.total_sales || 0;
-        
-          // Fetch sold prices for this week
-          const now = Timestamp.now();
-          const lastWeek = new Timestamp(now.seconds - 7 * 24 * 60 * 60, now.nanoseconds);
-          const lastMonth = new Timestamp(now.seconds - 30 * 24 * 60 * 60, now.nanoseconds);
+        if (shopDocSnapshot.exists()) {
+          setIsStoreSetup(false);
 
-          const ordersQueryThisWeek = query(
-            collection(firestore, 'orders'),
-            // where('status', '==', 'complete'),
-            where('order_date', '>=', lastWeek),
-            where('seller_id', '==', uid)
-          );
+          // Fetch the sales data from the seller's document
+          const sellerDocRef = doc(firestore, 'sellers', uid);
+          const sellerDocSnapshot = await getDoc(sellerDocRef);
 
-          const ordersQueryThisMonth = query(
-            collection(firestore, 'orders'),
-            // where('status', '==', 'complete'),
-            where('order_date', '>=', lastMonth),
-            where('seller_id', '==', uid)
-          );
-          const [ordersSnapshotThisWeek, ordersSnapshotThisMonth] = await Promise.all([
-            getDocs(ordersQueryThisWeek),
-            getDocs(ordersQueryThisMonth)
-          ]);
+          if (sellerDocSnapshot.exists()) {
+            const sellerData = sellerDocSnapshot.data();
+            const totalSalesSum = sellerData.total_sales || 0;
 
-          
-          let thisWeekSalesSum = 0;
-          let thisMonthSalesSum = 0;
+            // Calculate the timestamps for this week and this month
+            const now = Timestamp.now();
+            const oneWeekAgo = new Timestamp(now.seconds - 7 * 24 * 60 * 60, now.nanoseconds);
+            const oneMonthAgo = new Timestamp(now.seconds - 30 * 24 * 60 * 60, now.nanoseconds);
 
-          ordersSnapshotThisWeek.forEach((orderDoc) => {
-            const orderData = orderDoc.data();
+            const ordersQueryThisWeek = query(
+              collection(firestore, 'orders'),
+              where('status', '==', 'completed'),
+              where('order_date', '>=', oneWeekAgo),
+              where('seller_id', '==', uid)
+            );
             
-            thisWeekSalesSum += orderData.sold_price || 0;
-          });
 
-          ordersSnapshotThisMonth.forEach((orderDoc) => {
-            const orderData = orderDoc.data();
-             
-            thisMonthSalesSum += orderData.sold_price || 0;
-          });
+            const ordersQueryThisMonth = query(
+              collection(firestore, 'orders'),
+              where('status', '==', 'completed'),
+              where('order_date', '>=', oneMonthAgo),
+              where('seller_id', '==', uid)
+            );
 
-          // Update total sales state
-          setTotalSales((prevTotalSales) => [
-            { ...prevTotalSales[0], sale: totalSalesSum },
-            { ...prevTotalSales[1], sale: thisWeekSalesSum },
-            { ...prevTotalSales[2], sale: thisMonthSalesSum }
-          ]);
+            const [ordersSnapshotThisWeek, ordersSnapshotThisMonth] = await Promise.all([
+              getDocs(ordersQueryThisWeek),
+              getDocs(ordersQueryThisMonth)
+            ]);
+            // console.log(ordersSnapshotThisWeek.data())
+            let thisWeekSalesSum = 0;
+            let thisMonthSalesSum = 0;
 
-          // Check if the store is already set up
-          
-        }  
-        
-      } else {
-        setIsStoreSetup(true);
-        console.log('Shop document does not exist');
-      }
-      
-    
+            ordersSnapshotThisWeek.forEach((doc) => {
+              const order = doc.data();
+              console.log(order)
+              thisWeekSalesSum += order.products.reduce((sum, product) => sum + (product.sold_price * product.quantity), 0);
+            });
+
+            ordersSnapshotThisMonth.forEach((doc) => {
+              const order = doc.data();
+              thisMonthSalesSum += order.products.reduce((sum, product) => sum + (product.sold_price * product.quantity), 0);
+            });
+
+            // Update total sales state
+            setTotalSales([
+              { head: "Total Sales", sale: totalSalesSum },
+              { head: "This Week Sales", sale: thisWeekSalesSum },
+              { head: "This Month Sales", sale: thisMonthSalesSum }
+            ]);
+          } else {
+            console.log('Seller document does not exist');
+            setIsStoreSetup(true);
+          }
+        } else {
+          console.log('Shop document does not exist');
+          setIsStoreSetup(true);
+        }
       } catch (error) {
-        console.error('Error fetching sales data:', error.message);
+        console.error('Error fetching sales data:', error);
       }
     };
 

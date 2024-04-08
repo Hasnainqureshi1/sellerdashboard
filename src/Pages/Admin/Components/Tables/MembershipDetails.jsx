@@ -148,6 +148,7 @@ const MembershipDetails = () => {
             <p className="text-lg font-semibold">Status:</p>
             <p className="text-gray-600">{data.status}</p>
           </div>
+         
           <div>
             <p className="text-lg font-semibold">Date:</p>
             <p className="text-gray-600">{formatDate(data?.date)}</p>

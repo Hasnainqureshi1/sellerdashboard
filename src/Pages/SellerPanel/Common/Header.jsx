@@ -24,7 +24,7 @@ console.log(setting);
   return (
     <div className='flex justify-between bg-white w-full p-3 shadow-lg'>
      <div className="left  flex flex-row-reverse">
-     <p>Logo</p>
+     <p className='text-xl font-mono ml-5 '>COSTCO</p>
      <div className="menu lg:hidden pr-10" >
      <AiOutlineMenu fontSize={24} onClick={sidebar}/>
 

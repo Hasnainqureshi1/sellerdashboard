@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { FaEdit, FaEye, FaTrash } from 'react-icons/fa';
 import AddProductModal from '../Model/AddProductModal';
 import { AppContext } from '../../../Context/Context';
-import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, deleteDoc, doc, serverTimestamp, onSnapshot } from 'firebase/firestore';
 import { firestore } from '../../../firebase/config'; 
 const Products = () => {
     const [products, setProducts] = useState([]);
@@ -12,22 +12,34 @@ const Products = () => {
     const [LoadingProduct, setLoadingProduct] = useState(false)
 
     useEffect(() => {
-        const fetchProducts = async () => {
-            if (!User) return; // Make sure User is not null
-            setLoadingProduct(true)
-            const q = query(collection(firestore, "products"), where("seller_id", "==", User.uid));
-            const querySnapshot = await getDocs(q);
+        if (!User) return; // Make sure User is defined and not null
+    
+        setLoadingProduct(true);
+    
+        // Define the query
+        const q = query(collection(firestore, "products"), where("seller_id", "==", User.uid));
+    
+        // Subscribe to the query
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
             const fetchedProducts = querySnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
+    
             setProducts(fetchedProducts);
-            setLoadingProduct(false)
-            console.log(fetchedProducts)
-        };
-
-        fetchProducts();
-    }, [User]); // Re-fetch products when User changes
+            setLoadingProduct(false);
+            console.log(fetchedProducts);
+        }, 
+        (error) => {
+            // Handle any errors
+            console.error("Error fetching products:", error);
+            setLoadingProduct(false);
+        });
+    
+        // Clean up the subscription
+        return () => unsubscribe();
+    
+    }, [User]);
     const handleDelete = async (productId) => {
         try {
             // Reference to the document to delete

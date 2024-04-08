@@ -36,13 +36,13 @@ const Dashboard = () => {
   
         const ordersQueryThisWeek = query(
           collection(firestore, 'orders'),
-          where('status', '==', 'complete'),
+          where('status', '==', 'completed'),
           where('order_date', '>=', lastWeek)
         );
   
         const ordersQueryThisMonth = query(
           collection(firestore, 'orders'),
-          where('status', '==', 'complete'),
+          where('status', '==', 'completed'),
           where('order_date', '>=', lastMonth)
         );
   
@@ -54,15 +54,16 @@ const Dashboard = () => {
         let thisWeekSalesSum = 0;
         let thisMonthSalesSum = 0;
   
-        ordersSnapshotThisWeek.forEach((orderDoc) => {
-          const orderData = orderDoc.data();
-          thisWeekSalesSum += orderData.sold_price || 0;
-        });
-  
-        ordersSnapshotThisMonth.forEach((orderDoc) => {
-          const orderData = orderDoc.data();
-          thisMonthSalesSum += orderData.sold_price || 0;
-        });
+          // Assuming each order has an array of products, each with a sold_price
+    ordersSnapshotThisWeek.forEach((orderDoc) => {
+      const orderData = orderDoc.data();
+      thisWeekSalesSum += orderData.products.reduce((sum, product) => sum + product.sold_price, 0);
+    });
+
+    ordersSnapshotThisMonth.forEach((orderDoc) => {
+      const orderData = orderDoc.data();
+      thisMonthSalesSum += orderData.products.reduce((sum, product) => sum + product.sold_price, 0);
+    });
   
         // Update total sales state
         setTotalSales((prevTotalSales) => [
@@ -131,7 +132,7 @@ const Dashboard = () => {
           ))}
         </div>
       </div>
-      <MembersDashboardChart />
+      {/* <MembersDashboardChart /> */}
     </div>
   );
 };

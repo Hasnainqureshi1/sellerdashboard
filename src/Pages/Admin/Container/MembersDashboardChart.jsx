@@ -45,6 +45,7 @@ const MembersDashboardChart = () => {
 
       appUsersQuerySnapshot.forEach((userDoc) => {
         const userData = userDoc.data();
+        console.log(userData);
         const joinedMonth = new Date(userData.date.seconds * 1000).getMonth();
         if (joinedMonth >= 0 && joinedMonth <= 11) {
           appUsersData[joinedMonth]++;

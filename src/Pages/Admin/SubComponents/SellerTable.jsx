@@ -53,7 +53,7 @@ const SellerTable = ({ data, onDelete,selectedRows ,onButtonClick, setSelectedRo
             <th className="px-4 py-2  text-xs lg:text-lg">Select</th>
             
             <th className="px-4 py-2 text-xs lg:text-lg">Name</th>
-            <th className="px-4 py-2 text-xs lg:text-lg">Shop Name</th>
+            
             <th className="px-4 py-2 text-xs lg:text-lg">Date Created</th>
             <th className="px-4 py-2 text-xs lg:text-lg">Total Sales</th>
             <th className="px-4 py-2 text-xs lg:text-lg">Items</th>
@@ -61,7 +61,7 @@ const SellerTable = ({ data, onDelete,selectedRows ,onButtonClick, setSelectedRo
           </tr>
         </thead>
         <tbody>
-         
+         {console.log(data)}
           {Object.values(data).map((row) => (
   <tr key={row.id} className='bg-white border dark:border-gray-300'>
     <td className="px-4 py-2 w-2">
@@ -74,7 +74,7 @@ const SellerTable = ({ data, onDelete,selectedRows ,onButtonClick, setSelectedRo
     </td>
    
     <td className="px-0 py-2 md:px-1 w-2 text-xs lg:text-lg ">{row.name}</td>
-    <td className="px-0 py-2 md:px-1 w-2 text-xs lg:text-lg">{row.shopName}</td>
+    
     <td className="px-0 py-2 md:px-1 w-2 text-xs lg:text-lg">{formatDate(row?.date)}</td>
     <td className="px-0 py-2 md:px-1 w-2 text-xs lg:text-lg">{row.total_sales}</td>
     <td className="px-0 md:px-1 py-2 w-2 text-xs lg:text-lg">{row.items}</td>

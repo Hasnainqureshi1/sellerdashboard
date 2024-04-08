@@ -1,6 +1,6 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { AppContext } from '../../../Context/Context'; // Adjust import path as necessary
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { firestore,storage } from '../../../firebase/config';
 import { useNavigate } from 'react-router-dom';
@@ -8,9 +8,10 @@ import { useNavigate } from 'react-router-dom';
 
 const StoreSetup = () => {
   const { User, Showalert } = useContext(AppContext);
+  const [isStripeConnected, setIsStripeConnected] = useState(false); // New state to track Stripe connection
   const [category, setCategory] = useState('');
   const [storeName, setStoreName] = useState('');
-  const [address, setAddress] = useState(''); // New state for address
+  const [address, setAddress] = useState('');
   const [imageFile, setImageFile] = useState(null);
   const navigate = useNavigate();
 
@@ -24,7 +25,7 @@ const StoreSetup = () => {
   const capitalizeFirstLetter = (string) => {
     return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
   };
-
+   
   const handleSubmit = async () => {
     if (!User || !User.uid) {
       alert("User is not authenticated");
@@ -44,6 +45,8 @@ const StoreSetup = () => {
     // Capitalize first letters and format data for Firestore
     const formattedStoreName = capitalizeFirstLetter(storeName);
     const formattedCategory = capitalizeFirstLetter(category);
+try {
+  
 
     // Update Firestore document
     const storeDocRef = doc(firestore, 'shop', User.uid);
@@ -53,7 +56,9 @@ const StoreSetup = () => {
       address: address, // Include address in Firestore document
       imageUrl
     }, { merge: true });
-
+  } catch (error) {
+    console.log(error)
+  }
     Showalert("Store created/updated successfully!", 'green');
     navigate('/sellerPanel/dashboard');
   };
