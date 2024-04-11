@@ -73,13 +73,13 @@ const OrderScan = () => {
 
   const updateOrdersAndCreateHistory = async (qr) => {
     const orderIds = qr.split(',').map(id => id.trim());
-    let successfulUpdates = []; // To keep track of successfully processed orders
-    let completedOrderIds = []; // To track completed orders
-    let completedOrdersDetails = []; // Store details of completed orders for alerting
+    let successfulUpdates = [];
+    let completedOrderIds = [];
+    let completedOrdersDetails = [];
   
     try {
-      // Use a batch to perform writes
       const batch = writeBatch(firestore);
+      let sellersToUpdate = {}; // Object to hold total sales to update per seller
   
       for (const orderId of orderIds) {
         const orderRef = doc(firestore, "orders", orderId);
@@ -88,60 +88,49 @@ const OrderScan = () => {
         if (!orderDoc.exists()) {
           console.log(`Order ${orderId} does not exist.`);
           alert('Order does not exist, or Wrong QR Code');
-          window.location.reload();
           continue;
         }
   
         const orderData = orderDoc.data();
         if (orderData.status === 'completed') {
           completedOrderIds.push(orderId);
-          completedOrdersDetails.push(orderData); // Store the order data for completed orders
+          completedOrdersDetails.push(orderData);
           console.log(`Order ${orderId} has already been completed.`);
           continue;
         }
   
-        // Update seller and mark order as completed
+        // Accumulate total sales per seller from all products in the order
         for (const product of orderData.products) {
           const totalProductValue = product.sold_price * product.quantity;
-          const sellerRef = doc(firestore, "sellers", orderData.seller_id);
-          const sellerDoc = await getDoc(sellerRef);
-          if (sellerDoc.exists()) {
-            const sellerData = sellerDoc.data();
-            const newTotalSales = (sellerData.total_sales || 0) + totalProductValue;
-            batch.update(sellerRef, { total_sales: newTotalSales });
-          }
+          sellersToUpdate[orderData.seller_id] = (sellersToUpdate[orderData.seller_id] || 0) + totalProductValue;
         }
   
+        // Mark order as completed
         batch.update(orderRef, { status: 'completed' });
         successfulUpdates.push(orderId);
       }
   
-      // Commit the batch write
+      // Update sellers with new total sales
+      for (const [sellerId, totalSales] of Object.entries(sellersToUpdate)) {
+        const sellerRef = doc(firestore, "sellers", sellerId);
+        batch.update(sellerRef, { total_sales: increment(totalSales) }); // Use Firestore increment to adjust total sales
+      }
+  
       await batch.commit();
+  
       if (successfulUpdates.length > 0) {
         const historyDocRef = await addDoc(collection(firestore, "orderHistory"), {
-            order_ids: successfulUpdates,
-            pickupDate: serverTimestamp()
+          order_ids: successfulUpdates,
+          pickupDate: serverTimestamp(),
         });
-    
-        // Alert message with improved English
-        alert("The order has been successfully marked as completed. You will now be redirected to the order history.");
-    
-        // Assuming useNavigate has been defined earlier in your component
-        navigate(`/superadmin/order-history/${historyDocRef.id}`);
-    }
-    
   
-      // Show alerts or process completed orders
+        alert("The order has been successfully marked as completed. You will now be redirected to the order history.");
+        navigate(`/superadmin/order-history/${historyDocRef.id}`);
+      }
+  
       if (completedOrdersDetails.length > 0) {
-        // Handle completed orders, e.g., showing alerts
-       
         console.log("Details of completed orders:", completedOrdersDetails);
         alert(`Completed Orders: ${completedOrderIds.join(', ')}. This order is already picked up. Look order in history.`);
-  
-       
-      
-        // Navigate to the order-history page after the alert is acknowledged
         navigate('/superadmin/order-history');
       }
   
@@ -150,6 +139,7 @@ const OrderScan = () => {
       console.error("Error processing orders:", error);
     }
   };
+  
   
   
  

@@ -52,64 +52,66 @@ const Sellers = () => {
  
 //      
 useEffect(() => {
-  const fetchSellers = async () => {
-    try {
-      // Fetch data from users collection and listen for real-time updates
-      const usersCollection = collection(firestore, 'users');
-      const usersQuery = query(usersCollection, where('role', '==', 'seller'));
-      
-      onSnapshot(usersQuery, async (snapshot) => {
-        const usersData = {};
+  const fetchSellers = () => {
+    // Listen for real-time updates from users with 'seller' role and are active
+    const usersCollection = collection(firestore, 'users');
+    const usersQuery = query(usersCollection, where('role', '==', 'seller'), where('isActive', '==', true));
   
-        snapshot.forEach((docs) => {
-          const userData = docs.data();
-          usersData[docs.id] = { id: docs.id, ...userData };
-        });
+    onSnapshot(usersQuery, (usersSnapshot) => {
+      const usersData = {};
   
-        // Fetch data from sellers collection and merge with user data
-        const sellersCollection = collection(firestore, 'sellers');
-        const sellersQuerySnapshot = await getDocs(sellersCollection);
-        
-        const sellersData = {};
+      usersSnapshot.forEach((docs) => {
+        const userData = docs.data();
+        usersData[docs.id] = { id: docs.id, ...userData };
+      });
+  
+      // Listen for real-time updates from active sellers
+      const sellersQuery = query(collection(firestore, 'sellers'), where("isActive", "==", true));
+  
+      onSnapshot(sellersQuery, (sellersSnapshot) => {
         const shopNamePromises = []; // Prepare to hold promises for fetching shop names
-        
-        sellersQuerySnapshot.forEach((docs) => {
-          const sellerData = docs.data();
-          const userId = docs.id; // Assuming the document ID in sellers collection matches the users collection
-          
+  
+        sellersSnapshot.forEach((docz) => {
+          const sellerData = docz.data();
+          const userId = docz.id; // Assuming the document ID in sellers collection matches the users collection
           if (userId in usersData) {
             // Merge seller data into existing user data
             usersData[userId] = { ...usersData[userId], ...sellerData };
+  
             // Prepare to fetch shop name
             const shopNamePromise = getDoc(doc(firestore, 'shop', userId))
               .then(shopDoc => {
                 if (shopDoc.exists()) {
-                  usersData[userId].shopName = shopDoc.data().storeName;  
-                  usersData[userId].shopName = '------'; // Placeholder if the shop doesn't exist
+                  usersData[userId].shopName = shopDoc.data().storeName;
+                } else {
+                  // Placeholder if the shop doesn't exist
+                  usersData[userId].shopName = '------';
                 }
               })
               .catch(error => {
                 console.error(`Error fetching shop for userId ${userId}:`, error);
-                usersData[userId].shopName = '------'; // Placeholder in case of an error
+                // Placeholder in case of an error
+                usersData[userId].shopName = '------';
               });
-        
+  
             shopNamePromises.push(shopNamePromise);
-          } else {
-            // If there's no matching user data, just add seller data separately
-            sellersData[docs.id] = { id: docs.id, ...sellerData };
           }
         });
   
-        // Update state or perform actions with the fetched data
-        console.log(usersData); // This will show the newly fetched sellers data
-        setFilteredData(usersData);
-        setData(usersData);
+        Promise.all(shopNamePromises).then(() => {
+          // Update state or perform actions with the fetched data
+          console.log(usersData); // This will show the newly merged data including shop names
+          setFilteredData(usersData); // Assuming setFilteredData is your state update function
+          setData(usersData); // Assuming setData is another state update function
+        });
+      }, (error) => {
+        console.error("Error fetching real-time sellers data:", error);
       });
-    } catch (error) {
-      console.error('Error fetching users data:', error);
-      // Handle error appropriately
-    }
+    }, (error) => {
+      console.error("Error fetching real-time users data:", error);
+    });
   };
+  
   
 
   fetchSellers();

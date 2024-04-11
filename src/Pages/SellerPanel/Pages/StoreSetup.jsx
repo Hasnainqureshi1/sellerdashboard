@@ -53,7 +53,8 @@ try {
     await setDoc(storeDocRef, {
       category: formattedCategory,
       storeName: formattedStoreName,
-      address: address, // Include address in Firestore document
+      address: address,  
+      isActive:true,
       imageUrl
     }, { merge: true });
   } catch (error) {

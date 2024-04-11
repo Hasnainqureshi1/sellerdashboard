@@ -47,19 +47,21 @@ console.log(params.sellerid);
       const totalReviews = reviewsData.length;
       const category = shopData?.category || 'uncategorized'; // Fallback to 'uncategorized' if category is falsy
 console.log(shopData)
-      const shopName = await shopData?.shopName;
+      const shopName = await shopData?.storeName;
+      console.log(shopName)
       // Combine all fetched data
       const combinedData = {
         ...sellerData,
         ...userData,
-        ...shopName , // Include shop name, fallback to placeholder
+        shopName , // Include shop name, fallback to placeholder
         category,
         totalOrders,
         totalReviews,
       };
 
-      console.log(combinedData.shopName);
+      console.log(combinedData.storeName);
       setSellerData(combinedData); // Update state with the combined data
+      console.log(combinedData)
     } catch (error) {
       console.error("Error fetching seller details:", error);
       // Handle or throw error as needed

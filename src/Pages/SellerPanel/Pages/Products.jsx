@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { FaEdit, FaEye, FaTrash } from 'react-icons/fa';
 import AddProductModal from '../Model/AddProductModal';
 import { AppContext } from '../../../Context/Context';
-import { collection, query, where, getDocs, deleteDoc, doc, serverTimestamp, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, getDocs, deleteDoc, doc, serverTimestamp, onSnapshot, updateDoc } from 'firebase/firestore';
 import { firestore } from '../../../firebase/config'; 
 const Products = () => {
     const [products, setProducts] = useState([]);
@@ -17,7 +17,11 @@ const Products = () => {
         setLoadingProduct(true);
     
         // Define the query
-        const q = query(collection(firestore, "products"), where("seller_id", "==", User.uid));
+        const q = query(
+            collection(firestore, "products"), 
+            where("seller_id", "==", User.uid),
+            where("isActive", "==", true) // Ensure only active products are fetched
+          );
     
         // Subscribe to the query
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -42,19 +46,22 @@ const Products = () => {
     }, [User]);
     const handleDelete = async (productId) => {
         try {
-            // Reference to the document to delete
+            // Reference to the document to update for soft delete
             const docRef = doc(firestore, "products", productId);
-            // Delete the document
-            await deleteDoc(docRef);
-            // Filter out the deleted product from the local state to update the UI
+            // Set isActive to false instead of deleting the document
+            await updateDoc(docRef, {
+                isActive: false
+            });
+            // Filter out the soft-deleted product from the local state to update the UI
             const updatedProducts = products.filter(product => product.id !== productId);
             setProducts(updatedProducts);
-            console.log("Product deleted successfully");
-            Showalert("Product deleted successfully","green");
+            console.log("Product deleted  successfully");
+            Showalert("Product deleted  successfully", "green");
         } catch (error) {
-            console.error("Error deleting product: ", error);
+            console.error("Error deleting (soft delete) product: ", error);
         }
     };
+    
 
     const truncateDescription = (description) => {
         return description.length > 100 ? `${description.substring(0, 100)}...` : description;

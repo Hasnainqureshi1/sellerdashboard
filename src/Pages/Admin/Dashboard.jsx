@@ -18,103 +18,102 @@ const Dashboard = () => {
   ]);
 
   useEffect(() => {
-    const fetchSalesData = async () => {
-      try {
-        // Fetch total sales from all sellers
-        const sellersCollectionRef = collection(firestore, 'sellers');
-        const sellersSnapshot = await getDocs(sellersCollectionRef);
-        let totalSalesSum = 0;
-        sellersSnapshot.forEach((sellerDoc) => {
-          const sellerData = sellerDoc.data();
-          totalSalesSum += sellerData.total_sales || 0;
-        });
-  
-        // Fetch sold prices for this week
-        const now = Timestamp.now();
-        const lastWeek = new Timestamp(now.seconds - 7 * 24 * 60 * 60, now.nanoseconds);
-        const lastMonth = new Timestamp(now.seconds - 30 * 24 * 60 * 60, now.nanoseconds);
-  
-        const ordersQueryThisWeek = query(
-          collection(firestore, 'orders'),
-          where('status', '==', 'completed'),
-          where('order_date', '>=', lastWeek)
-        );
-  
-        const ordersQueryThisMonth = query(
-          collection(firestore, 'orders'),
-          where('status', '==', 'completed'),
-          where('order_date', '>=', lastMonth)
-        );
-  
-        const [ordersSnapshotThisWeek, ordersSnapshotThisMonth] = await Promise.all([
-          getDocs(ordersQueryThisWeek),
-          getDocs(ordersQueryThisMonth)
-        ]);
-  
-        let thisWeekSalesSum = 0;
-        let thisMonthSalesSum = 0;
-  
-          // Assuming each order has an array of products, each with a sold_price
+   const fetchSalesData = async () => {
+  try {
+    // Fetch total sales from all sellers
+    const sellersCollectionRef = collection(firestore, 'sellers');
+    const sellersSnapshot = await getDocs(sellersCollectionRef);
+    let totalSalesSum = 0;
+    sellersSnapshot.forEach((sellerDoc) => {
+      const sellerData = sellerDoc.data();
+      totalSalesSum += sellerData.total_sales || 0;
+    });
+
+    // Fetch sold prices for this week and this month
+    const now = Timestamp.now();
+    const lastWeek = new Timestamp(now.seconds - 7 * 24 * 60 * 60, now.nanoseconds);
+    const lastMonth = new Timestamp(now.seconds - 30 * 24 * 60 * 60, now.nanoseconds);
+
+    const ordersQueryThisWeek = query(
+      collection(firestore, 'orders'),
+      where('status', '==', 'completed'),
+      where('order_date', '>=', lastWeek)
+    );
+
+    const ordersQueryThisMonth = query(
+      collection(firestore, 'orders'),
+      where('status', '==', 'completed'),
+      where('order_date', '>=', lastMonth)
+    );
+
+    const [ordersSnapshotThisWeek, ordersSnapshotThisMonth] = await Promise.all([
+      getDocs(ordersQueryThisWeek),
+      getDocs(ordersQueryThisMonth)
+    ]);
+
+    let thisWeekSalesSum = 0;
+    let thisMonthSalesSum = 0;
+
     ordersSnapshotThisWeek.forEach((orderDoc) => {
       const orderData = orderDoc.data();
-      thisWeekSalesSum += orderData.products.reduce((sum, product) => sum + product.sold_price, 0);
+      thisWeekSalesSum += orderData.products.reduce((sum, product) => sum + (product.sold_price * product.quantity), 0);
     });
 
     ordersSnapshotThisMonth.forEach((orderDoc) => {
       const orderData = orderDoc.data();
-      thisMonthSalesSum += orderData.products.reduce((sum, product) => sum + product.sold_price, 0);
+      thisMonthSalesSum += orderData.products.reduce((sum, product) => sum + (product.sold_price * product.quantity), 0);
     });
-  
-        // Update total sales state
-        setTotalSales((prevTotalSales) => [
-          { ...prevTotalSales[0], sale: totalSalesSum },
-          { ...prevTotalSales[1], sale: thisWeekSalesSum },
-          { ...prevTotalSales[2], sale: thisMonthSalesSum }
-        ]);
-      } catch (error) {
-        console.error('Error fetching sales data:', error.message);
-      }
-    };
-  
-    fetchSalesData();
-  }, []);
+
+    // Update total sales state
+    setTotalSales((prevTotalSales) => [
+      { ...prevTotalSales[0], sale: totalSalesSum },
+      { ...prevTotalSales[1], sale: thisWeekSalesSum },
+      { ...prevTotalSales[2], sale: thisMonthSalesSum }
+    ]);
+  } catch (error) {
+    console.error('Error fetching sales data:', error.message);
+  }
+};
+
+fetchSalesData();
+}, []);
   
 
   //fetching total sellers and membership 
   useEffect(() => {
     const fetchTotalUsers = async () => {
       try {
-        // Fetch total sales from all sellers
+        // Fetch only active sellers
         const sellersCollectionRef = collection(firestore, 'sellers');
-        const sellersSnapshot = await getDocs(sellersCollectionRef);
+        const activeSellersQuery = query(sellersCollectionRef, where("isActive", "==", true));
+        const sellersSnapshot = await getDocs(activeSellersQuery);
         let totalSalesSum = 0;
         sellersSnapshot.forEach((sellerDoc) => {
           const sellerData = sellerDoc.data();
           totalSalesSum += sellerData.total_sales || 0;
         });
-
-        // Fetch total number of sellers
-        const totalSellers = sellersSnapshot.size;
-
+    
+        // Fetch total number of active sellers
+        const totalActiveSellers = sellersSnapshot.size;
+    
         // Fetch total memberships from app_users collection
         const membershipsCollectionRef = collection(firestore, 'app_users');
         const membershipsSnapshot = await getDocs(membershipsCollectionRef);
         const totalMemberships = membershipsSnapshot.size;
-
+    
         // Update total sales and total users state
         setTotalSales((prevTotalSales) => [
           { ...prevTotalSales[0], sale: totalSalesSum },
           ...prevTotalSales.slice(1), // No change for this week and this month sales
         ]);
         setTotalUsers([
-          { head: 'Total Sellers', total: totalSellers },
+          { head: 'Total Active Sellers', total: totalActiveSellers },
           { head: 'Total Memberships', total: totalMemberships },
         ]);
       } catch (error) {
         console.error('Error fetching sales data:', error.message);
       }
     };
-
     fetchTotalUsers();
   }, []);
 

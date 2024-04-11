@@ -38,6 +38,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
     description: productDescription,
     price: productPrice,
     images: imageUrls,
+    isActive:true,
     seller_id: User.uid, 
     createdAt:serverTimestamp(),
 };
